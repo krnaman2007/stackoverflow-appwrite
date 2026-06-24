@@ -26,23 +26,25 @@ export default async function createQuestionCollection(){
     ])
     console.log("Questions Attributed created")
 
-    //create index
-    // await Promise.all([
-    //     databases.createIndex(
-    //         db,
-    //         questionCollection,
-    //         "title",
-    //         DatabasesIndexType.Fulltext,
-    //         ["title"],
-    //         [OrderBy.Asc]
-    //     ),
-    //     databases.createIndex(
-    //         db,
-    //         questionCollection,
-    //         "content",
-    //         DatabasesIndexType.Fulltext,
-    //         ["cotent"],
-    //         [OrderBy.Asc]
-    //     )
-    // ])
+    await new Promise(resolve => setTimeout(resolve, 2000))
+
+    // create index
+    await Promise.all([
+        databases.createIndex(
+            db,
+            questionCollection,
+            "title",
+            DatabasesIndexType.Fulltext,
+            ["title"],
+            [OrderBy.Asc]
+        ),
+        databases.createIndex(
+            db,
+            questionCollection,
+            "content",
+            DatabasesIndexType.Fulltext,
+            ["content"],
+            [OrderBy.Asc]
+        )
+    ])
 }
