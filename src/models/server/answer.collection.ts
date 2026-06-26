@@ -1,4 +1,4 @@
-import { DatabasesIndexType, Permission } from "node-appwrite";
+import { DatabasesIndexType, Permission, Role } from "node-appwrite";
 import { answerCollection, db } from "../name";
 import { tablesDB } from "./config";
 
@@ -9,11 +9,11 @@ export default async function createAnswerCollection() {
         answerCollection,
         answerCollection,
         [
-            Permission.create("users"),
-            Permission.read("any"),
-            Permission.read("users"),
-            Permission.update("users"),
-            Permission.delete("users"),
+            Permission.create(Role.users()),
+            Permission.read(Role.any()),
+            Permission.read(Role.users()),
+            Permission.update(Role.users()),
+            Permission.delete(Role.users()),
         ]
     )
     console.log("Answer Collection Created");

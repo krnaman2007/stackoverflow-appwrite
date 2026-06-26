@@ -1,15 +1,15 @@
-import { Permission } from "node-appwrite";
+import { Permission, Role } from "node-appwrite";
 import { commentCollection, db } from "../name";
 import { tablesDB } from "./config";
 
 export default async function createCommentCollection() {
     // Creating Collection
     await tablesDB.createTable(db, commentCollection, commentCollection, [
-        Permission.create("users"),
-        Permission.read("any"),
-        Permission.read("users"),
-        Permission.update("users"),
-        Permission.delete("users"),
+        Permission.create(Role.users()),
+        Permission.read(Role.any()),
+        Permission.read(Role.users()),
+        Permission.update(Role.users()),
+        Permission.delete(Role.users()),
     ]);
     console.log("Comment Collection Created");
 
