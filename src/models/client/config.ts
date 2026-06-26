@@ -8,10 +8,10 @@ const client = new Client()
     .setProject(env.appwrite.projectId); // Your project ID
 
 
-const databases=new TablesDB(client)
+const tablesDB=new TablesDB(client)
 const account = new Account(client);
 const avatars=new Avatars(client)
 const storage=new Storage(client)
 
-export {client, databases , account, avatars, storage}
+export {client, tablesDB , account, avatars, storage}
 
