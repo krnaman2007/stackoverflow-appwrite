@@ -13,6 +13,7 @@ export default async function getOrCreateDB(){
         try {
             await tablesDB.create(db,db)  //databaseId,name
             console.log("Database created")
+            
             //create collections
             await Promise.all([
                 createQuestionCollection(),

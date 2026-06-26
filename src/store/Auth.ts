@@ -11,11 +11,13 @@ export interface UserPrefs{
 }
 
 interface IAuthStore{
-    session: Models.Session | null
-    jwt: string | null
-    user: Models.User<UserPrefs> | null
-    hydrated: boolean
+    // STATE — data jo store mein rahega
+    session: Models.Session | null   // Appwrite session (login info)
+    jwt: string | null               // JWT token (API calls ke liye)
+    user: Models.User<UserPrefs> | null  // logged in user + uske prefs
+    hydrated: boolean                // store ready hai ya nahi
 
+    // ACTIONS — functions jo state change karenge
     setHydrated(): void
     verifySession(): Promise<void>
     login(
@@ -39,7 +41,12 @@ interface IAuthStore{
 }
 
 export const useAuthStore = create<IAuthStore>()(
+    //persist(stateCreatorFn, persistOptions)
+    //persist middleware automatically state ko localStorage me save karta hai.
     persist(
+        //immer middleware lets you perform immutable updates.
+        //Mutable → same object ko change karna
+        //Immutable → new object bana kar change karna
         immer((set)=>({
             session: null,
             jwt: null,
@@ -66,7 +73,6 @@ export const useAuthStore = create<IAuthStore>()(
                     const [user,{jwt}]=await Promise.all([
                         account.get<UserPrefs>(),
                         account.createJWT()
-
                     ])
                     if(!user.prefs?.reputation) await account.updatePrefs<UserPrefs>({
                         reputation: 0
@@ -84,7 +90,20 @@ export const useAuthStore = create<IAuthStore>()(
 
             async createAccount(name: string,email: string,password: string){
                 try {
-                    await account.create(ID.unique(),email,password,name)
+                    /*
+                    await account.create({
+                        userId: '<USER_ID>',
+                        email: 'email@example.com',
+                        password: '',
+                        name: '<NAME>' // optional
+                    });
+                    */
+                    await account.create(
+                        ID.unique(),
+                        email,
+                        password,
+                        name
+                    )
                     return {success: true}
                 } catch (error) {
                     console.log(error)
@@ -105,10 +124,10 @@ export const useAuthStore = create<IAuthStore>()(
             }
         })),
         {
-            name: "auth",
-            onRehydrateStorage(){
-                return (state, error)=>{
-                    if(!error) state?.setHydrated()
+            name: "auth",  // localStorage mein is naam se save hoga
+            onRehydrateStorage() {  // jab storage se data load ho raha ho
+                return (state, error) => {  // load hone ke baad yeh chalta hai
+                    if (!error) state?.setHydrated()  // koi error nahi → hydrated: true
                 }
             }
         }
