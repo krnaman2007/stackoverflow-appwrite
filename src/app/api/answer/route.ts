@@ -1,5 +1,5 @@
 import { answerCollection, db } from "@/models/name";
-import { databases, users} from "@/models/server/config";
+import { tablesDB, users} from "@/models/server/config";
 import { NextRequest, NextResponse } from "next/server";
 import { ID } from "node-appwrite";
 import {UserPrefs} from "@/store/Auth"
@@ -8,11 +8,26 @@ export async function POST(request: NextRequest){
     try {
         const {questionId, answer, authorId}=await request.json()
 
-        const response=await databases.createDocument(db,answerCollection,ID.unique(),{
-            content: answer,
-            authorId,
-            questionId
+        /*
+        await tablesDB.createRow({
+            databaseId: string,        // required
+            tableId: string,           // required
+            rowId: string,             // required
+            data: object,              // required — actual data
+            permissions: Permission[], // optional
+            transactionId: string,     // optional
         })
+        */
+        const response=await tablesDB.createRow(
+            db,
+            answerCollection,
+            ID.unique(),
+            {
+                content: answer,
+                authorId,
+                questionId
+            }
+        )
 
         //Increase author reputation
         const prefs=await users.getPrefs<UserPrefs>(authorId)
@@ -41,9 +56,9 @@ export async function DELETE(request: NextRequest){
         
         const {answerId}=await request.json()
 
-        const answer=await databases.getDocument(db,answerCollection,answerId)
+        const answer=await tablesDB.getRow(db,answerCollection,answerId)
 
-        const response=await databases.deleteDocument(db,answerCollection,answerId)
+        const response=await tablesDB.deleteRow(db,answerCollection,answerId)
 
         //decrease the reputation
         const prefs=await users.getPrefs<UserPrefs>(answer.authorId)
