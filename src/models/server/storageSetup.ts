@@ -1,4 +1,4 @@
-import { Permission } from "node-appwrite";
+import { Permission, Role } from "node-appwrite";
 import { questionAttachmentBucket } from "../name";
 import { storage } from "./config";
 
@@ -8,15 +8,30 @@ export default async function getOrCreateStorage() {
         console.log("Storage Connected");
     } catch (error) {
         try {
+            /*
+            await storage.createBucket({
+                bucketId: string,                    // required
+                name: string,                        // required
+                permissions: Permission[],           // optional
+                fileSecurity: boolean,               // optional
+                enabled: boolean,                    // optional
+                maximumFileSize: number,             // optional (bytes mein)
+                allowedFileExtensions: string[],     // optional
+                compression: Compression,            // optional
+                encryption: boolean,                 // optional
+                antivirus: boolean,                  // optional
+                transformations: boolean             // optional
+            })
+            */
             await storage.createBucket(
                 questionAttachmentBucket,
                 questionAttachmentBucket,
                 [
-                    Permission.create("users"),
-                    Permission.read("any"),
-                    Permission.read("users"),
-                    Permission.update("users"),
-                    Permission.delete("users"),
+                    Permission.create(Role.users()),
+                    Permission.read(Role.any()),
+                    Permission.read(Role.users()),
+                    Permission.update(Role.users()),
+                    Permission.delete(Role.users()),
                 ],
                 false,
                 undefined,
