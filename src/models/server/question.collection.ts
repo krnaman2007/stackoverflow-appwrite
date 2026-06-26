@@ -1,28 +1,57 @@
-import { DatabasesIndexType, Permission } from "node-appwrite"
+import { Permission, Role, TablesDBIndexType } from "node-appwrite"
 
 import {db, questionCollection} from "../name"
-import {databases} from "./config"
+import {tablesDB} from "./config"
 import { OrderBy } from "node-appwrite"
 
 
 export default async function createQuestionCollection(){
     //create collection
-    await databases.createCollection(db,questionCollection,questionCollection,[
-        Permission.read("any"),
-        Permission.read("users"),
-        Permission.create("users"),
-        Permission.update("users"),
-        Permission.delete("users"),
-    ])
+    /*
+        await tablesDB.createTable({
+            databaseId: string,       // required
+            tableId: string,          // required
+            name: string,             // required
+            permissions: Permission[], // optional
+            rowSecurity: boolean,     // optional
+            enabled: boolean,         // optional
+            columns: [],              // optional
+            indexes: []               // optional
+        })
+    */
+    await tablesDB.createTable(
+        db,
+        questionCollection,
+        questionCollection,
+        [
+            Permission.read(Role.any()),
+            Permission.read(Role.users()),
+            Permission.create(Role.users()),
+            Permission.update(Role.users()),
+            Permission.delete(Role.users()),
+        ]
+    )
     console.log("Question collection is created")
 
     //creating attributes and indexes
     await Promise.all([
-        databases.createStringAttribute(db,questionCollection,"title",100,true),
-        databases.createStringAttribute(db,questionCollection,"content",10000,true),
-        databases.createStringAttribute(db,questionCollection,"authorId",50,true),
-        databases.createStringAttribute(db,questionCollection,"tags",50,true,undefined,true),
-        databases.createStringAttribute(db,questionCollection,"attachmentId",50,false),
+        /*
+        createStringColumn(
+            databaseId,      // db
+            tableId,         // questionCollection  
+            key,             // "tags"
+            size,            // 50
+            required,        // true  ← pehla true
+            defaultValue,    // undefined
+            array,           // true  ← dusra true
+        )
+        */
+
+        tablesDB.createStringColumn(db,questionCollection,"title",100,true),
+        tablesDB.createStringColumn(db,questionCollection,"content",10000,true),
+        tablesDB.createStringColumn(db,questionCollection,"authorId",50,true),
+        tablesDB.createStringColumn(db,questionCollection,"tags",50,true,undefined,true),
+        tablesDB.createStringColumn(db,questionCollection,"attachmentId",50,false),
     ])
     console.log("Questions Attributed created")
 
@@ -30,19 +59,19 @@ export default async function createQuestionCollection(){
 
     // create index
     await Promise.all([
-        databases.createIndex(
-            db,
-            questionCollection,
-            "title",
-            DatabasesIndexType.Fulltext,
-            ["title"],
-            [OrderBy.Asc]
+        tablesDB.createIndex(
+            db,                           // databaseId
+            questionCollection,           // tableId
+            "title",                      // key
+            TablesDBIndexType.Fulltext,   // type
+            ["title"],                    // attributes
+            [OrderBy.Asc]                 // order
         ),
-        databases.createIndex(
+        tablesDB.createIndex(
             db,
             questionCollection,
             "content",
-            DatabasesIndexType.Fulltext,
+            TablesDBIndexType.Fulltext,
             ["content"],
             [OrderBy.Asc]
         )

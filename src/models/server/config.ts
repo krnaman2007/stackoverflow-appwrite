@@ -1,6 +1,6 @@
 import env from "@/app/env";
 
-import {Avatars, Client, Databases, Storage, Users} from 'node-appwrite'
+import {Avatars, Client, Databases, Storage, TablesDB, Users} from 'node-appwrite'
 
 let client = new Client();
 
@@ -10,10 +10,10 @@ client
     .setKey(env.appwrite.apikey) // Your secret API key
 ;
 
-const databases=new Databases(client)
+const tablesDB=new TablesDB(client)
 const avatars=new Avatars(client)
 const storage=new Storage(client)
 const users=new Users(client)
 
 
-export {client, databases ,users, avatars, storage}
+export {client, tablesDB ,users, avatars, storage}
