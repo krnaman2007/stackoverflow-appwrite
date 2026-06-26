@@ -1,5 +1,5 @@
 import { answerCollection, db, questionCollection, voteCollection } from "@/models/name";
-import { databases, users } from "@/models/server/config";
+import { tablesDB, users } from "@/models/server/config";
 import { UserPrefs } from "@/store/Auth";
 import { NextRequest, NextResponse } from "next/server";
 import { ID, Query } from "node-appwrite";
@@ -8,17 +8,38 @@ export async function POST(request: NextRequest) {
     try {
         const { votedById, voteStatus, type, typeId } = await request.json();
 
-        const response = await databases.listDocuments(db, voteCollection, [
-            Query.equal("type", type),
-            Query.equal("typeId", typeId),
-            Query.equal("votedById", votedById),
-        ]);
+        const response = await tablesDB.listRows(
+            db,                     //databaseId
+            voteCollection,         //tableId
+            [                       //queries
+                Query.equal("type", type),
+                Query.equal("typeId", typeId),
+                Query.equal("votedById", votedById),
+            ]
+        )
+        /*
+        response = {
+            total: 1,
+            rows: [
+                {
+                    $id: "vote_123",
+                    userId: "user1",
+                    questionId: "q1",
+                    voteType: "upvote"
+                }
+            ]
+        }
+        */
 
-        if (response.documents.length > 0) {
-            await databases.deleteDocument(db, voteCollection, response.documents[0].$id);
+        if (response.rows.length > 0) {
+            await tablesDB.deleteRow(
+                db,
+                voteCollection,
+                response.rows[0].$id
+            )
 
             // Decrease the reputation of the question/answer author
-            const questionOrAnswer = await databases.getDocument(
+            const questionOrAnswer = await tablesDB.getRow(
                 db,
                 type === "question" ? questionCollection : answerCollection,
                 typeId
@@ -28,23 +49,28 @@ export async function POST(request: NextRequest) {
 
             await users.updatePrefs<UserPrefs>(questionOrAnswer.authorId, {
                 reputation:
-                    response.documents[0].voteStatus === "upvoted"
+                    response.rows[0].voteStatus === "upvoted"
                         ? Number(authorPrefs.reputation) - 1
                         : Number(authorPrefs.reputation) + 1,
             });
         }
 
         // that means prev vote does not exists or voteStatus changed
-        if (response.documents[0]?.voteStatus !== voteStatus) {
-            const doc = await databases.createDocument(db, voteCollection, ID.unique(), {
-                type,
-                typeId,
-                voteStatus,
-                votedById,
-            });
+        if (response.rows[0]?.voteStatus !== voteStatus) {
+            const doc = await tablesDB.createRow(
+                db,
+                voteCollection,
+                ID.unique(), 
+                {
+                    type,
+                    typeId,
+                    voteStatus,
+                    votedById,
+                }
+            )
 
             // Increate/Decrease the reputation of the question/answer author accordingly
-            const questionOrAnswer = await databases.getDocument(
+            const questionOrAnswer = await tablesDB.getRow(
                 db,
                 type === "question" ? questionCollection : answerCollection,
                 typeId
@@ -53,11 +79,11 @@ export async function POST(request: NextRequest) {
             const authorPrefs = await users.getPrefs<UserPrefs>(questionOrAnswer.authorId);
 
             // if vote was present
-            if (response.documents[0]) {
+            if (response.rows[0]) {
                 await users.updatePrefs<UserPrefs>(questionOrAnswer.authorId, {
                     reputation:
                         // that means prev vote was "upvoted" and new value is "downvoted" so we have to decrease the reputation
-                        response.documents[0].voteStatus === "upvoted"
+                        response.rows[0].voteStatus === "upvoted"
                             ? Number(authorPrefs.reputation) - 1
                             : Number(authorPrefs.reputation) + 1,
                 });
@@ -72,14 +98,14 @@ export async function POST(request: NextRequest) {
             }
 
             const [upvotes, downvotes] = await Promise.all([
-                databases.listDocuments(db, voteCollection, [
+                tablesDB.listRows(db, voteCollection, [
                     Query.equal("type", type),
                     Query.equal("typeId", typeId),
                     Query.equal("voteStatus", "upvoted"),
                     Query.equal("votedById", votedById),
                     Query.limit(1), // for optimization as we only need total
                 ]),
-                databases.listDocuments(db, voteCollection, [
+                tablesDB.listRows(db, voteCollection, [
                     Query.equal("type", type),
                     Query.equal("typeId", typeId),
                     Query.equal("voteStatus", "downvoted"),
@@ -91,7 +117,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json(
                 {
                     data: { document: doc, voteResult: upvotes.total - downvotes.total },
-                    message: response.documents[0] ? "Vote Status Updated" : "Voted",
+                    message: response.rows[0] ? "Vote Status Updated" : "Voted",
                 },
                 {
                     status: 201,
@@ -100,14 +126,14 @@ export async function POST(request: NextRequest) {
         }
 
         const [upvotes, downvotes] = await Promise.all([
-            databases.listDocuments(db, voteCollection, [
+            tablesDB.listRows(db, voteCollection, [
                 Query.equal("type", type),
                 Query.equal("typeId", typeId),
                 Query.equal("voteStatus", "upvoted"),
                 Query.equal("votedById", votedById),
                 Query.limit(1), // for optimization as we only need total
             ]),
-            databases.listDocuments(db, voteCollection, [
+            tablesDB.listRows(db, voteCollection, [
                 Query.equal("type", type),
                 Query.equal("typeId", typeId),
                 Query.equal("voteStatus", "downvoted"),
