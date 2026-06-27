@@ -1,31 +1,53 @@
-"use client"
+// "use client"
 
-import { useAuthStore } from "@/store/Auth"
-import { useRouter } from "next/navigation"
-import React,{useEffect} from "react"
+// import { useAuthStore } from "@/store/Auth"
+// import { useRouter } from "next/navigation"
+// import React,{useEffect} from "react"
 
-const Layout=({children}: {children: React.ReactNode})=>{
-    const {session}=useAuthStore()
-    const router=useRouter()
+// const Layout=({children}: {children: React.ReactNode})=>{
+//     const {session}=useAuthStore()
+//     const router=useRouter()
 
-    //Agar user already logged in hai toh usse yahan aane hi nahi dena
-    React.useEffect(()=>{
-        if(session){
-            router.push("/")
-        }
-    },[session,router])
+//     //Agar user already logged in hai toh usse yahan aane hi nahi dena
+//     React.useEffect(()=>{
+//         if(session){
+//             router.push("/")
+//         }
+//     },[session,router])
 
-    if(session){
-        return null
+//     if(session){
+//         return null
+//     }
+
+//     return (
+//         <div>
+//             <div>
+//                 {children}
+//             </div>
+//         </div>
+//     )
+// }
+
+// export default Layout
+"use client";
+
+import { useAuthStore } from "@/store/Auth";
+import { useRouter } from "next/navigation";
+import React, { useEffect } from "react";
+
+const Layout = ({ children }: { children: React.ReactNode }) => {
+  const { session } = useAuthStore();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (session) {
+      router.push("/");
     }
+  }, [session, router]);
 
-    return (
-        <div>
-            <div>
-                {children}
-            </div>
-        </div>
-    )
-}
+  if (session) return null;
 
-export default Layout
+  return <>{children}</>;
+};
+
+export default Layout;
