@@ -4,12 +4,13 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { quesId: string } }
+  { params }: { params: Promise<{ quesId: string }> }
 ) {
   try {
+    const { quesId } = await params;
     const { title, content, tags, attachmentId } = await request.json();
 
-    const response = await tablesDB.updateRow(db, questionCollection, params.quesId, {
+    const response = await tablesDB.updateRow(db, questionCollection, quesId, {
       title,
       content,
       tags,
