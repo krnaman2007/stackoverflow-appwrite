@@ -8,18 +8,17 @@ import QuestionCard from "@/components/QuestionCard";
 import Pagination from "@/components/Pagination";
 import { Suspense } from "react";
 import Search from "./Search";
-import { IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconFilter } from "@tabler/icons-react";
 
 const LIMIT = 10;
 
 export default async function QuestionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; search?: string }>;
+  searchParams: { page?: string; search?: string };
 }) {
-  const resolvedSearchParams = await searchParams;
-  const page = Math.max(1, parseInt(resolvedSearchParams.page || "1"));
-  const search = resolvedSearchParams.search?.trim() || "";
+  const page = Math.max(1, parseInt(searchParams.page || "1"));
+  const search = searchParams.search?.trim() || "";
 
   const queries = [
     Query.orderDesc("$createdAt"),

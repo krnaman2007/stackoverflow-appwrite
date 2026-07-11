@@ -1,4 +1,4 @@
-import { answerCollection, commentCollection, db, questionCollection, voteCollection, questionAttachmentBucket } from "@/models/name";
+import { answerCollection, commentCollection, db, questionCollection, voteCollection } from "@/models/name";
 import { tablesDB } from "@/models/server/config";
 import { Query } from "node-appwrite";
 import { notFound } from "next/navigation";
@@ -10,55 +10,36 @@ import Comments from "@/components/Comments";
 import DeleteQuestion from "./DeleteQuestion";
 import EditQuestion from "./EditQuestion";
 import { IconClock, IconUser, IconTag } from "@tabler/icons-react";
+import { storage } from "@/models/server/config";
+import { questionAttachmentBucket } from "@/models/name";
 import env from "@/app/env";
 
 export default async function QuestionPage({
   params,
 }: {
-  params: Promise<{ quesId: string; quesName: string }>;
+  params: { quesId: string; quesName: string };
 }) {
-  const { quesId } = await params;
   let question: any;
   try {
-    question = await tablesDB.getRow(db, questionCollection, quesId);
+    question = await tablesDB.getRow(db, questionCollection, params.quesId);
   } catch {
     notFound();
   }
 
   const [votes, answers, comments] = await Promise.all([
     tablesDB.listRows(db, voteCollection, [
-      Query.equal("typeId", quesId),
+      Query.equal("typeId", params.quesId),
       Query.equal("type", "question"),
     ]).catch(() => ({ rows: [], total: 0 })),
     tablesDB.listRows(db, answerCollection, [
-      Query.equal("questionId", quesId),
+      Query.equal("questionId", params.quesId),
       Query.orderAsc("$createdAt"),
     ]).catch(() => ({ rows: [], total: 0 })),
     tablesDB.listRows(db, commentCollection, [
-      Query.equal("typeId", quesId),
+      Query.equal("typeId", params.quesId),
       Query.equal("type", "question"),
     ]).catch(() => ({ rows: [], total: 0 })),
   ]);
-
-  // Enrich answers with upvotes/downvotes and client-facing vote history
-  const enrichedAnswers = await Promise.all(
-    answers.rows.map(async (answer: any) => {
-      const answerVotes = await tablesDB.listRows(db, voteCollection, [
-        Query.equal("typeId", answer.$id),
-        Query.equal("type", "answer"),
-      ]).catch(() => ({ rows: [], total: 0 }));
-
-      const upvotes = answerVotes.rows.filter((v: any) => v.voteStatus === "upvoted").length;
-      const downvotes = answerVotes.rows.filter((v: any) => v.voteStatus === "downvoted").length;
-
-      return {
-        ...answer,
-        upvotes,
-        downvotes,
-        votes: answerVotes.rows,
-      };
-    })
-  );
 
   const upvotes = votes.rows.filter((v: any) => v.voteStatus === "upvoted").length;
   const downvotes = votes.rows.filter((v: any) => v.voteStatus === "downvoted").length;
@@ -107,10 +88,10 @@ export default async function QuestionPage({
               <div className="shrink-0">
                 <VoteButtons
                   type="question"
-                  typeId={quesId}
+                  typeId={params.quesId}
                   upvotes={upvotes}
                   downvotes={downvotes}
-                  votes={votes.rows}
+                  userVote={null}
                 />
               </div>
               <div className="flex-1 min-w-0">
@@ -148,7 +129,7 @@ export default async function QuestionPage({
             <div className="mt-4 pl-14">
               <Comments
                 type="question"
-                typeId={quesId}
+                typeId={params.quesId}
                 comments={comments.rows}
               />
             </div>
@@ -156,8 +137,8 @@ export default async function QuestionPage({
 
           {/* Answers */}
           <Answers
-            questionId={quesId}
-            answers={enrichedAnswers}
+            questionId={params.quesId}
+            answers={answers.rows}
             currentUserId={question.authorId}
           />
         </div>

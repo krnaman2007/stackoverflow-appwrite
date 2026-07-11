@@ -10,24 +10,23 @@ import { IconStar, IconStack2, IconMessage } from "@tabler/icons-react";
 export default async function UserProfilePage({
   params,
 }: {
-  params: Promise<{ userId: string; userSlug: string }>;
+  params: { userId: string; userSlug: string };
 }) {
-  const { userId } = await params;
   let userData: any;
   try {
-    userData = await users.get(userId);
+    userData = await users.get(params.userId);
   } catch {
     notFound();
   }
 
   const [questions, answers] = await Promise.all([
     tablesDB.listRows(db, questionCollection, [
-      Query.equal("authorId", userId),
+      Query.equal("authorId", params.userId),
       Query.orderDesc("$createdAt"),
       Query.limit(20),
     ]).catch(() => ({ rows: [], total: 0 })),
     tablesDB.listRows(db, answerCollection, [
-      Query.equal("authorId", userId),
+      Query.equal("authorId", params.userId),
       Query.orderDesc("$createdAt"),
       Query.limit(20),
     ]).catch(() => ({ rows: [], total: 0 })),
@@ -64,7 +63,7 @@ export default async function UserProfilePage({
               </div>
             </div>
           </div>
-          <EditButton userId={userId} />
+          <EditButton userId={params.userId} />
         </div>
       </div>
 

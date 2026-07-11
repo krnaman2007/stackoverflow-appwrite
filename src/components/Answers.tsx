@@ -14,7 +14,7 @@ interface AnswersProps {
 }
 
 export default function Answers({ questionId, answers: initialAnswers, currentUserId }: AnswersProps) {
-  const { user } = useAuthStore();
+  const { user, jwt } = useAuthStore();
   const router = useRouter();
   const [answers, setAnswers] = useState(initialAnswers);
   const [content, setContent] = useState("");
@@ -36,7 +36,7 @@ export default function Answers({ questionId, answers: initialAnswers, currentUs
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to post answer");
-      setAnswers((prev) => [...prev, { ...data, upvotes: 0, downvotes: 0, votes: [] }]);
+      setAnswers((prev) => [...prev, data]);
       setContent("");
     } catch (err: any) {
       setError(err.message);
@@ -73,12 +73,12 @@ export default function Answers({ questionId, answers: initialAnswers, currentUs
               <VoteButtons
                 type="answer"
                 typeId={answer.$id}
-                upvotes={answer.upvotes ?? 0}
-                downvotes={answer.downvotes ?? 0}
-                votes={answer.votes ?? []}
+                upvotes={0}
+                downvotes={0}
+                userVote={null}
               />
               <div className="flex-1 min-w-0">
-                <div className="text-sm whitespace-pre-wrap text-foreground/90 leading-relaxed font-sans">
+                <div className="text-sm whitespace-pre-wrap text-foreground/90 leading-relaxed">
                   {answer.content}
                 </div>
                 <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">

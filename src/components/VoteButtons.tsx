@@ -3,14 +3,14 @@
 import { useAuthStore } from "@/store/Auth";
 import { IconArrowUp, IconArrowDown } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 interface VoteButtonsProps {
   type: "question" | "answer";
   typeId: string;
   upvotes: number;
   downvotes: number;
-  votes?: any[];
+  userVote?: "upvoted" | "downvoted" | null;
 }
 
 export default function VoteButtons({
@@ -18,31 +18,13 @@ export default function VoteButtons({
   typeId,
   upvotes,
   downvotes,
-  votes = [],
+  userVote,
 }: VoteButtonsProps) {
   const { user } = useAuthStore();
   const router = useRouter();
-  const [currentVote, setCurrentVote] = useState<"upvoted" | "downvoted" | null>(null);
+  const [currentVote, setCurrentVote] = useState(userVote ?? null);
   const [voteResult, setVoteResult] = useState(upvotes - downvotes);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (user && votes.length > 0) {
-      const matched = votes.find((v) => v.votedById === user.$id);
-      if (matched) {
-        setCurrentVote(matched.voteStatus);
-      } else {
-        setCurrentVote(null);
-      }
-    } else {
-      setCurrentVote(null);
-    }
-  }, [user, votes]);
-
-  // Sync vote result count when server data changes
-  useEffect(() => {
-    setVoteResult(upvotes - downvotes);
-  }, [upvotes, downvotes]);
 
   const handleVote = async (voteStatus: "upvoted" | "downvoted") => {
     if (!user) {
