@@ -9,14 +9,11 @@ interface RTEProps {
   className?: string;
 }
 
-// Lightweight RTE using contenteditable + textarea fallback
-// Markdown preview would need a lib — keeping it simple for now
 export default function RTE({ value, onChange, placeholder, className }: RTEProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onChange?.(e.target.value);
-    // Auto resize
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
@@ -24,10 +21,10 @@ export default function RTE({ value, onChange, placeholder, className }: RTEProp
   };
 
   useEffect(() => {
-    if (textareaRef.current && value !== undefined) {
+    if (textareaRef.current && value !== undefined && textareaRef.current.value !== value) {
       textareaRef.current.value = value;
     }
-  }, []);
+  }, [value]);
 
   return (
     <div className={`rounded-md border border-border bg-input overflow-hidden ${className ?? ""}`}>
