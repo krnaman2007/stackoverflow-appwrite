@@ -3,14 +3,19 @@
 import { useAuthStore } from "@/store/Auth";
 import { IconArrowUp, IconArrowDown } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+
+interface Vote {
+  votedById: string;
+  voteStatus: "upvoted" | "downvoted";
+}
 
 interface VoteButtonsProps {
   type: "question" | "answer";
   typeId: string;
   upvotes: number;
   downvotes: number;
-  userVote?: "upvoted" | "downvoted" | null;
+  votes: Vote[];
 }
 
 export default function VoteButtons({
@@ -18,13 +23,22 @@ export default function VoteButtons({
   typeId,
   upvotes,
   downvotes,
-  userVote,
+  votes,
 }: VoteButtonsProps) {
   const { user } = useAuthStore();
   const router = useRouter();
-  const [currentVote, setCurrentVote] = useState(userVote ?? null);
+  const [currentVote, setCurrentVote] = useState<"upvoted" | "downvoted" | null>(null);
   const [voteResult, setVoteResult] = useState(upvotes - downvotes);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      const existingVote = votes.find((v) => v.votedById === user.$id);
+      setCurrentVote(existingVote ? existingVote.voteStatus : null);
+    } else {
+      setCurrentVote(null);
+    }
+  }, [user, votes]);
 
   const handleVote = async (voteStatus: "upvoted" | "downvoted") => {
     if (!user) {
@@ -48,9 +62,7 @@ export default function VoteButtons({
       const data = await res.json();
       if (res.ok) {
         setVoteResult(data.data.voteResult);
-        setCurrentVote(
-          data.message === "Vote Withdrawn" ? null : voteStatus
-        );
+        setCurrentVote(data.message === "Vote Withdrawn" ? null : voteStatus);
       }
     } catch (err) {
       console.error(err);

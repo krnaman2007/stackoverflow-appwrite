@@ -75,7 +75,7 @@ export default function Answers({ questionId, answers: initialAnswers, currentUs
                 typeId={answer.$id}
                 upvotes={0}
                 downvotes={0}
-                userVote={null}
+                votes={[]}
               />
               <div className="flex-1 min-w-0">
                 <div className="text-sm whitespace-pre-wrap text-foreground/90 leading-relaxed">

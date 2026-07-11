@@ -14,32 +14,44 @@ import { storage } from "@/models/server/config";
 import { questionAttachmentBucket } from "@/models/name";
 import env from "@/app/env";
 
+//utility: Appwrite ke class-instance objects ko plain object mein convert karta hai
+function toPlain<T>(data: T): T {
+  return JSON.parse(JSON.stringify(data));
+}
+
 export default async function QuestionPage({
   params,
 }: {
-  params: { quesId: string; quesName: string };
+  params: Promise<{ quesId: string; quesName: string }>;
 }) {
   let question: any;
+  const { quesId, quesName } = await params;
+
   try {
-    question = await tablesDB.getRow(db, questionCollection, params.quesId);
+    const rawQuestion = await tablesDB.getRow(db, questionCollection, quesId);
+    question = toPlain(rawQuestion);
   } catch {
     notFound();
   }
 
   const [votes, answers, comments] = await Promise.all([
     tablesDB.listRows(db, voteCollection, [
-      Query.equal("typeId", params.quesId),
+      Query.equal("typeId", quesId),
       Query.equal("type", "question"),
     ]).catch(() => ({ rows: [], total: 0 })),
     tablesDB.listRows(db, answerCollection, [
-      Query.equal("questionId", params.quesId),
+      Query.equal("questionId", quesId),
       Query.orderAsc("$createdAt"),
     ]).catch(() => ({ rows: [], total: 0 })),
     tablesDB.listRows(db, commentCollection, [
-      Query.equal("typeId", params.quesId),
+      Query.equal("typeId", quesId),
       Query.equal("type", "question"),
     ]).catch(() => ({ rows: [], total: 0 })),
   ]);
+
+  const plainAnswers = toPlain(answers.rows);
+  const plainComments = toPlain(comments.rows); 
+  const plainVotes = toPlain(votes.rows) as any[];
 
   const upvotes = votes.rows.filter((v: any) => v.voteStatus === "upvoted").length;
   const downvotes = votes.rows.filter((v: any) => v.voteStatus === "downvoted").length;
@@ -88,10 +100,10 @@ export default async function QuestionPage({
               <div className="shrink-0">
                 <VoteButtons
                   type="question"
-                  typeId={params.quesId}
+                  typeId={quesId}
                   upvotes={upvotes}
                   downvotes={downvotes}
-                  userVote={null}
+                  votes={plainVotes}
                 />
               </div>
               <div className="flex-1 min-w-0">
@@ -129,16 +141,16 @@ export default async function QuestionPage({
             <div className="mt-4 pl-14">
               <Comments
                 type="question"
-                typeId={params.quesId}
-                comments={comments.rows}
+                typeId={quesId}
+                comments={plainComments}
               />
             </div>
           </div>
 
           {/* Answers */}
           <Answers
-            questionId={params.quesId}
-            answers={answers.rows}
+            questionId={quesId}
+            answers={plainAnswers}
             currentUserId={question.authorId}
           />
         </div>

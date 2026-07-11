@@ -15,10 +15,11 @@ const LIMIT = 10;
 export default async function QuestionsPage({
   searchParams,
 }: {
-  searchParams: { page?: string; search?: string };
+  searchParams: Promise<{ page?: string; search?: string }>;
 }) {
-  const page = Math.max(1, parseInt(searchParams.page || "1"));
-  const search = searchParams.search?.trim() || "";
+  const resolvedSearchParams=await searchParams
+  const page = Math.max(1, parseInt(resolvedSearchParams.page || "1"));
+  const search = resolvedSearchParams.search?.trim() || "";
 
   const queries = [
     Query.orderDesc("$createdAt"),
